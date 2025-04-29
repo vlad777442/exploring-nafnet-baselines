@@ -129,7 +129,7 @@ def main(args):
     print(f"Training completed in {int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}")
     
     psnr_score, ssim_score, lpips_score = evaluate(model, test_loader, device)
-    print(f"Final PSNR: {psnr_score:.2f} dB | Final SSIM: {ssim_score:.4f} | Final LPIPS: {lpips_score:.4f}")
+    print(f"PSNR: {psnr_score:.2f} dB | SSIM: {ssim_score:.4f} | LPIPS: {lpips_score:.4f}")
 
     csv_path = os.path.join(args.output, "results.csv")
     file_exists = os.path.isfile(csv_path)
@@ -137,7 +137,7 @@ def main(args):
     with open(csv_path, mode="a", newline="") as f:
         writer = csv.writer(f)
         if not file_exists:
-            writer.writerow(["Variant", "PSNR (dB)", "SSIM", "LPIPS"])  # header
+            writer.writerow(["Variant", "PSNR (dB)", "SSIM", "LPIPS"])  
         writer.writerow([args.variant, f"{psnr_score:.2f}", f"{ssim_score:.4f}", f"{lpips_score:.4f}"])
 
     model.eval()
@@ -153,8 +153,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--variant", type=str, default="baseline", help="baseline | a1 | a2 | a3 | a4")
-    parser.add_argument("--epochs", type=int, default=5)
-    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--output", type=str, default="./results")
     args = parser.parse_args()
     main(args)

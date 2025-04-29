@@ -130,3 +130,4 @@ class NAFBlock_A4(nn.Module):
         x = self.sg(x)
         x = self.pw2(x)
         return x + residual
+
