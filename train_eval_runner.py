@@ -5,7 +5,7 @@ from torchvision.utils import save_image
 import argparse
 import os
 from corrupted_dataset import CorruptedCIFAR
-from blocks import NAFBlock_Baseline, NAFBlock_A1, NAFBlock_A2, NAFBlock_A3, NAFBlock_A4
+from blocks import NAFBlock_Baseline, NAFBlock_A1, NAFBlock_A2, NAFBlock_A3, NAFBlock_A4, NAFBlock_A5
 from tqdm import tqdm
 import lpips
 import torchvision.transforms.functional as TF
@@ -108,7 +108,8 @@ def main(args):
         "a1": NAFBlock_A1,
         "a2": NAFBlock_A2,
         "a3": NAFBlock_A3,
-        "a4": NAFBlock_A4
+        "a4": NAFBlock_A4,
+        "a5": NAFBlock_A5
     }
     block = block_map[args.variant.lower()]
     model = SimpleNAFNet(block).to(device)
@@ -152,7 +153,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--variant", type=str, default="baseline", help="baseline | a1 | a2 | a3 | a4")
+    parser.add_argument("--variant", type=str, default="baseline", help="baseline | a1 | a2 | a3 | a4 | a5")
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--output", type=str, default="./results")

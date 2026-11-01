@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 class SimpleGate(nn.Module):
@@ -129,5 +130,58 @@ class NAFBlock_A4(nn.Module):
         x = self.dw(x)
         x = self.sg(x)
         x = self.pw2(x)
+        return x + residual
+
+
+class CBAM(nn.Module):
+    """Channel attention followed by spatial attention."""
+
+    def __init__(self, channels, reduction=16):
+        super().__init__()
+        hidden_channels = max(1, channels // reduction)
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.max_pool = nn.AdaptiveMaxPool2d(1)
+        self.channel_mlp = nn.Sequential(
+            nn.Conv2d(channels, hidden_channels, 1, bias=False),
+            nn.ReLU(),
+            nn.Conv2d(hidden_channels, channels, 1, bias=False),
+        )
+        self.spatial_conv = nn.Conv2d(2, 1, 7, padding=3, bias=False)
+
+    def forward(self, x):
+        channel_weights = torch.sigmoid(
+            self.channel_mlp(self.avg_pool(x))
+            + self.channel_mlp(self.max_pool(x))
+        )
+        x = x * channel_weights
+        spatial_features = torch.cat(
+            (x.mean(dim=1, keepdim=True), x.max(dim=1, keepdim=True).values),
+            dim=1,
+        )
+        return x * torch.sigmoid(self.spatial_conv(spatial_features))
+
+
+class NAFBlock_A5(nn.Module):
+    """Baseline convolution/gating path with InstanceNorm and CBAM."""
+
+    def __init__(self, channels):
+        super().__init__()
+        self.norm = nn.InstanceNorm2d(channels, affine=True, track_running_stats=False)
+        self.pw1 = nn.Conv2d(channels, channels * 2, 1)
+        self.dw = nn.Conv2d(
+            channels * 2, channels * 2, 3, padding=1, groups=channels * 2
+        )
+        self.sg = SimpleGate()
+        self.pw2 = nn.Conv2d(channels, channels, 1)
+        self.attn = CBAM(channels)
+
+    def forward(self, x):
+        residual = x
+        x = self.norm(x)
+        x = self.pw1(x)
+        x = self.dw(x)
+        x = self.sg(x)
+        x = self.pw2(x)
+        x = self.attn(x)
         return x + residual
 

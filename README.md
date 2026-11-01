@@ -35,6 +35,31 @@ CIFAR-10 with artificial corruptions:
 - **Variant A4**: No attention mechanism
 - **Variant A5**: InstanceNorm with CBAM attention
 
+### Variant A5 implementation
+A5 retains the baseline convolution, SimpleGate, and residual path. It replaces
+LayerNorm with `InstanceNorm2d(affine=True, track_running_stats=False)` and SCA
+with CBAM after the output pointwise convolution. CBAM uses shared channel MLP
+weights for global average/max pooling (reduction ratio 16, at least one hidden
+channel), followed by spatial attention over channel average/max maps with a
+7×7 convolution. Both attention stages use sigmoid gates.
+
+These are explicit choices for this newly added implementation; the earlier
+README did not specify these details. The committed results cover only the
+baseline and A1–A4; A5 has not yet been benchmarked.
+
+Run A5 with the same dependencies used by the existing training runner:
+
+```bash
+python train_eval_runner.py --variant a5 --epochs 10 --output ./results/a5
+```
+
+Run the A5 shape, gradient, attention, residual, and runner integration checks
+with PyTorch installed (no dataset or pretrained weights are downloaded):
+
+```bash
+python -m unittest discover -s tests -v
+```
+
 ## Evaluation Metrics
 - **PSNR**: Higher is better
 - **SSIM**: Higher is better
